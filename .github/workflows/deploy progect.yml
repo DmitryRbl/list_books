@@ -1,19 +1,37 @@
-name: Build and Deploy(bitcoin)
+name: Build and Deploy(books_list)
+
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    concurrency: ci-${{ github.ref }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
     steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v2
-
-      - name: Install and Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-        run: |
-          cd client
-          npm ci
-          npm run build
-
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: go to client
+        run: cd client
+      - name: install dependencies
+        run: npm ci
+      - name: build app
+        run: npm run build
+        env:
+          PUBLIC_URL: /list_books
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./build
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v1
